@@ -15,7 +15,7 @@ impl Default for AnsiParser {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 enum Status {
     Init,
     Esc,
