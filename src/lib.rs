@@ -1,4 +1,4 @@
-#![warn(missing_docs)]
+#![warn(missing_docs, clippy::panic, clippy::unwrap_used)]
 
 //! A simple, minimal ANSI terminal emulator whose contents can be get as a string.
 
@@ -34,12 +34,12 @@ impl TermState {
         }
     }
     fn contents_to_string(&self) -> String {
-        let mut s = String::new();
+        let mut buf = Vec::with_capacity(self.width as usize * self.height as usize);
         for y in 0..self.height {
-            s.push_str(std::str::from_utf8(self.line_slice(y)).unwrap().trim_end());
-            s.push('\n');
+            buf.extend_from_slice(self.line_slice(y));
+            buf.push(b'\n');
         }
-        s
+        String::from_utf8_lossy(&buf).into_owned()
     }
     fn line_slice(&self, y: usize) -> &[u8] {
         let from = y * self.width as usize;

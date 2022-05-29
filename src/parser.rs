@@ -42,8 +42,7 @@ impl AnsiParser {
                         term_callback(TermCmd::CarriageReturn);
                     }
                     b'\n' => term_callback(TermCmd::LineFeed),
-                    c if c.is_ascii() => term_callback(TermCmd::PutChar(c)),
-                    c => panic!("Unhandled byte: {}", c),
+                    c => term_callback(TermCmd::PutChar(c)),
                 },
                 Status::Esc => {
                     match byte {
