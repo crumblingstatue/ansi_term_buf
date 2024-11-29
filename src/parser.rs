@@ -72,7 +72,7 @@ impl AnsiParser {
                                 }
                                 b'A' => {
                                     // Move cursor up N lines
-                                    let n = self.params.get(0);
+                                    let n = self.params.first();
                                     term_callback(TermCmd::CursorUp(n.cloned().unwrap_or(1)));
                                 }
                                 _ => eprintln!("terminator byte {} ({})", byte, byte as char),

@@ -34,7 +34,7 @@ impl TermState {
         }
     }
     fn contents_to_string(&self) -> String {
-        let mut buf = Vec::with_capacity(self.width as usize * self.height as usize);
+        let mut buf = Vec::with_capacity(self.width as usize * self.height);
         for y in 0..self.height {
             buf.extend_from_slice(self.line_slice(y));
             buf.push(b'\n');
