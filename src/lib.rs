@@ -123,4 +123,8 @@ impl Term {
     pub fn contents_to_string(&self) -> String {
         self.term_state.contents_to_string()
     }
+    /// Returns whether the terminal buffer is "empty" (nothing has been written to it yet)
+    pub fn is_empty(&self) -> bool {
+        self.term_state.cells.is_empty()
+    }
 }
