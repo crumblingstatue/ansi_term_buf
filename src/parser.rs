@@ -75,7 +75,7 @@ impl AnsiParser {
                                     let n = self.params.first();
                                     term_callback(TermCmd::CursorUp(n.cloned().unwrap_or(1)));
                                 }
-                                _ => eprintln!("terminator byte {} ({})", byte, byte as char),
+                                _ => {}
                             }
                             self.status = Status::Init;
                             self.params.clear();
