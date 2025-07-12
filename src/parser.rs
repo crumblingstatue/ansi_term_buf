@@ -85,32 +85,32 @@ impl AnsiParser {
                                 b'A' => {
                                     // Move cursor up N lines
                                     let n = self.params.first();
-                                    term_callback(TermCmd::CursorUp(n.cloned().unwrap_or(1)));
+                                    term_callback(TermCmd::CursorUp(n.copied().unwrap_or(1)));
                                 }
                                 b'B' => {
                                     // Move down N lines
                                     let n = self.params.first();
-                                    term_callback(TermCmd::CursorDown(n.cloned().unwrap_or(1)));
+                                    term_callback(TermCmd::CursorDown(n.copied().unwrap_or(1)));
                                 }
                                 b'C' => {
                                     // Move cursor right N columns
                                     let n = self.params.first();
-                                    term_callback(TermCmd::CursorRight(n.cloned().unwrap_or(1)));
+                                    term_callback(TermCmd::CursorRight(n.copied().unwrap_or(1)));
                                 }
                                 b'D' => {
                                     // Move cursor left N columns
                                     let n = self.params.first();
-                                    term_callback(TermCmd::CursorLeft(n.cloned().unwrap_or(1)));
+                                    term_callback(TermCmd::CursorLeft(n.copied().unwrap_or(1)));
                                 }
                                 b'E' => {
                                     // Beginning of next line, N lines down
                                     let n = self.params.first();
-                                    term_callback(TermCmd::CursorCrDown(n.cloned().unwrap_or(1)));
+                                    term_callback(TermCmd::CursorCrDown(n.copied().unwrap_or(1)));
                                 }
                                 b'F' => {
                                     // Beginning of prev line, N lines up
                                     let n = self.params.first();
-                                    term_callback(TermCmd::CursorCrUp(n.cloned().unwrap_or(1)));
+                                    term_callback(TermCmd::CursorCrUp(n.copied().unwrap_or(1)));
                                 }
                                 etc => {
                                     log::warn!(

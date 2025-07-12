@@ -94,6 +94,7 @@ impl Cursor {
 
 impl Term {
     /// Create a new terminal with the specified width
+    #[must_use]
     pub fn new(width: u16) -> Self {
         Self {
             term_state: TermState::new(width),
@@ -115,10 +116,11 @@ impl Term {
                     self.term_state.cursor.y += n as usize;
                 }
                 TermCmd::CursorLeft(n) => {
-                    self.term_state.cursor.x = self.term_state.cursor.x.saturating_sub(n as u16);
+                    self.term_state.cursor.x =
+                        self.term_state.cursor.x.saturating_sub(u16::from(n));
                 }
                 TermCmd::CursorRight(n) => {
-                    self.term_state.cursor.x += n as u16;
+                    self.term_state.cursor.x += u16::from(n);
                 }
                 TermCmd::CursorCrUp(n) => {
                     self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize);
@@ -140,10 +142,12 @@ impl Term {
         self.ansi_parser = AnsiParser::default();
     }
     /// Get the contents of the terminal as a string
+    #[must_use]
     pub fn contents_to_string(&self) -> String {
         self.term_state.contents_to_string()
     }
     /// Returns whether the terminal buffer is "empty" (nothing has been written to it yet)
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.term_state.cells.is_empty()
     }
