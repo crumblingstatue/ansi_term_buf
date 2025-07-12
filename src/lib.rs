@@ -1,4 +1,10 @@
-#![warn(missing_docs, clippy::panic, clippy::unwrap_used, clippy::pedantic)]
+#![warn(
+    missing_docs,
+    clippy::panic,
+    clippy::unwrap_used,
+    clippy::pedantic,
+    clippy::nursery
+)]
 
 //! A simple, minimal ANSI terminal emulator whose contents can be get as a string.
 
@@ -65,7 +71,7 @@ impl TermState {
             self.extend();
         }
     }
-    fn line_feed(&mut self) {
+    const fn line_feed(&mut self) {
         self.cursor.x = 0;
         self.cursor.y += 1;
     }
@@ -87,7 +93,7 @@ struct Cursor {
 }
 
 impl Cursor {
-    fn index(&self, width: u16) -> usize {
+    const fn index(&self, width: u16) -> usize {
         self.y * width as usize + self.x as usize
     }
 }
@@ -148,7 +154,7 @@ impl Term {
     }
     /// Returns whether the terminal buffer is "empty" (nothing has been written to it yet)
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.term_state.cells.is_empty()
     }
 }
