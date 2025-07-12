@@ -102,14 +102,34 @@ impl Term {
     }
     /// Feed bytes to the terminal, updating its state
     pub fn feed(&mut self, data: &[u8]) {
-        self.ansi_parser.advance(data, |cmd| match cmd {
-            TermCmd::PutChar(c) => self.term_state.put_char(c),
-            TermCmd::CarriageReturn => self.term_state.cursor.x = 0,
-            TermCmd::LineFeed => self.term_state.line_feed(),
-            TermCmd::CursorUp(n) => {
-                self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize)
+        self.ansi_parser.advance(data, |cmd| {
+            log::debug!("Executing command {cmd:?}");
+            match cmd {
+                TermCmd::PutChar(c) => self.term_state.put_char(c),
+                TermCmd::CarriageReturn => self.term_state.cursor.x = 0,
+                TermCmd::LineFeed => self.term_state.line_feed(),
+                TermCmd::CursorUp(n) => {
+                    self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize);
+                }
+                TermCmd::CursorDown(n) => {
+                    self.term_state.cursor.y += n as usize;
+                }
+                TermCmd::CursorLeft(n) => {
+                    self.term_state.cursor.x = self.term_state.cursor.x.saturating_sub(n as u16);
+                }
+                TermCmd::CursorRight(n) => {
+                    self.term_state.cursor.x += n as u16;
+                }
+                TermCmd::CursorCrUp(n) => {
+                    self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize);
+                    self.term_state.cursor.x = 0;
+                }
+                TermCmd::CursorCrDown(n) => {
+                    self.term_state.cursor.y += n as usize;
+                    self.term_state.cursor.x = 0;
+                }
+                TermCmd::EraseFromCursorToEol => self.term_state.erase_from_cursor_to_eol(),
             }
-            TermCmd::EraseFromCursorToEol => self.term_state.erase_from_cursor_to_eol(),
         });
     }
     /// Completely reset the terminal to its initial state

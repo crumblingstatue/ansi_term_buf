@@ -22,12 +22,23 @@ enum Status {
     ControlSeqStart,
 }
 
+#[derive(Debug)]
 pub enum TermCmd {
     PutChar(u8),
     CarriageReturn,
     LineFeed,
     /// Move cursor up this many lines
     CursorUp(u8),
+    /// Move cursor down this many lines
+    CursorDown(u8),
+    /// Move cursor left this many columns
+    CursorLeft(u8),
+    /// Move cursor right this many columns
+    CursorRight(u8),
+    /// Beginning of line, this many lines down
+    CursorCrDown(u8),
+    /// Beginning of line, this many lines up
+    CursorCrUp(u8),
     /// Erase from cursor to the end of line
     EraseFromCursorToEol,
 }
@@ -54,13 +65,14 @@ impl AnsiParser {
                             // Control sequence start
                             self.status = Status::ControlSeqStart;
                         }
-                        _ => eprintln!("Unexpected ansi [{byte:x}]"),
+                        _ => log::error!("Unexpected ansi [{byte:x}]"),
                     }
                 }
                 Status::ControlSeqStart => {
                     match byte {
                         0x30..=0x3F => {
                             self.params.push(byte);
+                            log::debug!("pushed param, now we have {:?}", self.params);
                         }
                         0x40..=0x7E => {
                             // Terminator byte
@@ -75,17 +87,43 @@ impl AnsiParser {
                                     let n = self.params.first();
                                     term_callback(TermCmd::CursorUp(n.cloned().unwrap_or(1)));
                                 }
+                                b'B' => {
+                                    // Move down N lines
+                                    let n = self.params.first();
+                                    term_callback(TermCmd::CursorDown(n.cloned().unwrap_or(1)));
+                                }
+                                b'C' => {
+                                    // Move cursor right N columns
+                                    let n = self.params.first();
+                                    term_callback(TermCmd::CursorRight(n.cloned().unwrap_or(1)));
+                                }
+                                b'D' => {
+                                    // Move cursor left N columns
+                                    let n = self.params.first();
+                                    term_callback(TermCmd::CursorLeft(n.cloned().unwrap_or(1)));
+                                }
+                                b'E' => {
+                                    // Beginning of next line, N lines down
+                                    let n = self.params.first();
+                                    term_callback(TermCmd::CursorCrDown(n.cloned().unwrap_or(1)));
+                                }
+                                b'F' => {
+                                    // Beginning of prev line, N lines up
+                                    let n = self.params.first();
+                                    term_callback(TermCmd::CursorCrUp(n.cloned().unwrap_or(1)));
+                                }
                                 etc => {
                                     log::warn!(
-                                        "Ignored control code (ch, dec, hex): '{ch}', {etc:X?}, {etc}",
-                                        ch = etc as char
+                                        "Ignored control code (ch, hex, dec): '{ch}', {etc:X?}, {etc}, params(hex, dec): {params:X?}, {params:?}",
+                                        ch = etc as char,
+                                        params = self.params
                                     );
                                 }
                             }
                             self.status = Status::Init;
                             self.params.clear();
                         }
-                        _ => eprintln!("Unexpected ansi <{byte:x}>"),
+                        _ => log::error!("Unexpected ansi <{byte:x}>"),
                     }
                 }
             }
