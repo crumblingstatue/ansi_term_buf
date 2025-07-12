@@ -75,7 +75,12 @@ impl AnsiParser {
                                     let n = self.params.first();
                                     term_callback(TermCmd::CursorUp(n.cloned().unwrap_or(1)));
                                 }
-                                _ => {}
+                                etc => {
+                                    log::warn!(
+                                        "Ignored control code (ch, dec, hex): '{ch}', {etc:X?}, {etc}",
+                                        ch = etc as char
+                                    );
+                                }
                             }
                             self.status = Status::Init;
                             self.params.clear();
