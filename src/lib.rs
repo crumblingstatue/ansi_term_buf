@@ -57,7 +57,7 @@ impl TermState {
     }
     fn extend(&mut self) {
         self.cells
-            .extend(std::iter::repeat(b' ').take(self.width as usize));
+            .extend(std::iter::repeat_n(b' ', self.width as usize));
         self.height += 1;
     }
     fn extend_while_cursor_past(&mut self) {
