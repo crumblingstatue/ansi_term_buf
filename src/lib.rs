@@ -1,4 +1,4 @@
-#![warn(missing_docs, clippy::panic, clippy::unwrap_used)]
+#![warn(missing_docs, clippy::panic, clippy::unwrap_used, clippy::pedantic)]
 
 //! A simple, minimal ANSI terminal emulator whose contents can be get as a string.
 
