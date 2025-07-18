@@ -71,10 +71,6 @@ impl TermState {
             self.extend();
         }
     }
-    const fn line_feed(&mut self) {
-        self.cursor.x = 0;
-        self.cursor.y += 1;
-    }
     fn erase_from_cursor_to_eol(&mut self) {
         for x in self.cursor.x..self.width {
             let idx = self.cursor.y * self.width as usize + x as usize;
@@ -114,7 +110,7 @@ impl Term {
             match cmd {
                 TermCmd::PutChar(c) => self.term_state.put_char(c),
                 TermCmd::CarriageReturn => self.term_state.cursor.x = 0,
-                TermCmd::LineFeed => self.term_state.line_feed(),
+                TermCmd::LineFeed => self.term_state.cursor.y += 1,
                 TermCmd::CursorUp(n) => {
                     self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize);
                 }
