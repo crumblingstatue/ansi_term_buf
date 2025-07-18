@@ -3,14 +3,27 @@ const ESC: u8 = 0x1b;
 #[derive(Debug)]
 pub struct AnsiParser {
     status: Status,
-    params: Vec<u8>,
+    param_bytes: Vec<u8>,
+}
+
+trait ParamBytesExt {
+    fn parse_first(&self) -> Option<u8>;
+}
+
+impl ParamBytesExt for Vec<u8> {
+    fn parse_first(&self) -> Option<u8> {
+        // NOTE: Parameters are text that must be parsed into a number
+        let s = std::str::from_utf8(self).ok()?;
+        let mut args = s.split(';');
+        args.next()?.parse().ok()
+    }
 }
 
 impl Default for AnsiParser {
     fn default() -> Self {
         Self {
             status: Status::Init,
-            params: Vec::new(),
+            param_bytes: Vec::new(),
         }
     }
 }
@@ -71,8 +84,7 @@ impl AnsiParser {
                 Status::ControlSeqStart => {
                     match byte {
                         0x30..=0x3F => {
-                            self.params.push(byte);
-                            log::debug!("pushed param, now we have {:?}", self.params);
+                            self.param_bytes.push(byte);
                         }
                         0x40..=0x7E => {
                             // Terminator byte
@@ -84,44 +96,44 @@ impl AnsiParser {
                                 }
                                 b'A' => {
                                     // Move cursor up N lines
-                                    let n = self.params.first();
-                                    term_callback(TermCmd::CursorUp(n.copied().unwrap_or(1)));
+                                    let n = self.param_bytes.parse_first();
+                                    term_callback(TermCmd::CursorUp(n.unwrap_or(1)));
                                 }
                                 b'B' => {
                                     // Move down N lines
-                                    let n = self.params.first();
-                                    term_callback(TermCmd::CursorDown(n.copied().unwrap_or(1)));
+                                    let n = self.param_bytes.parse_first();
+                                    term_callback(TermCmd::CursorDown(n.unwrap_or(1)));
                                 }
                                 b'C' => {
                                     // Move cursor right N columns
-                                    let n = self.params.first();
-                                    term_callback(TermCmd::CursorRight(n.copied().unwrap_or(1)));
+                                    let n = self.param_bytes.parse_first();
+                                    term_callback(TermCmd::CursorRight(n.unwrap_or(1)));
                                 }
                                 b'D' => {
                                     // Move cursor left N columns
-                                    let n = self.params.first();
-                                    term_callback(TermCmd::CursorLeft(n.copied().unwrap_or(1)));
+                                    let n = self.param_bytes.parse_first();
+                                    term_callback(TermCmd::CursorLeft(n.unwrap_or(1)));
                                 }
                                 b'E' => {
                                     // Beginning of next line, N lines down
-                                    let n = self.params.first();
-                                    term_callback(TermCmd::CursorCrDown(n.copied().unwrap_or(1)));
+                                    let n = self.param_bytes.parse_first();
+                                    term_callback(TermCmd::CursorCrDown(n.unwrap_or(1)));
                                 }
                                 b'F' => {
                                     // Beginning of prev line, N lines up
-                                    let n = self.params.first();
-                                    term_callback(TermCmd::CursorCrUp(n.copied().unwrap_or(1)));
+                                    let n = self.param_bytes.parse_first();
+                                    term_callback(TermCmd::CursorCrUp(n.unwrap_or(1)));
                                 }
                                 etc => {
                                     log::warn!(
                                         "Ignored control code (ch, hex, dec): '{ch}', {etc:X?}, {etc}, params(hex, dec): {params:X?}, {params:?}",
                                         ch = etc as char,
-                                        params = self.params
+                                        params = self.param_bytes
                                     );
                                 }
                             }
                             self.status = Status::Init;
-                            self.params.clear();
+                            self.param_bytes.clear();
                         }
                         _ => log::error!("Unexpected ansi <{byte:x}>"),
                     }
