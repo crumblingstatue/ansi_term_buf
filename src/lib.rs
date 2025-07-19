@@ -105,35 +105,31 @@ impl Term {
     }
     /// Feed bytes to the terminal, updating its state
     pub fn feed(&mut self, data: &[u8]) {
-        self.ansi_parser.advance(data, |cmd| {
-            log::debug!("Executing command {cmd:?}");
-            match cmd {
-                TermCmd::PutChar(c) => self.term_state.put_char(c),
-                TermCmd::CarriageReturn => self.term_state.cursor.x = 0,
-                TermCmd::LineFeed => self.term_state.cursor.y += 1,
-                TermCmd::CursorUp(n) => {
-                    self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize);
-                }
-                TermCmd::CursorDown(n) => {
-                    self.term_state.cursor.y += n as usize;
-                }
-                TermCmd::CursorLeft(n) => {
-                    self.term_state.cursor.x =
-                        self.term_state.cursor.x.saturating_sub(u16::from(n));
-                }
-                TermCmd::CursorRight(n) => {
-                    self.term_state.cursor.x += u16::from(n);
-                }
-                TermCmd::CursorCrUp(n) => {
-                    self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize);
-                    self.term_state.cursor.x = 0;
-                }
-                TermCmd::CursorCrDown(n) => {
-                    self.term_state.cursor.y += n as usize;
-                    self.term_state.cursor.x = 0;
-                }
-                TermCmd::EraseFromCursorToEol => self.term_state.erase_from_cursor_to_eol(),
+        self.ansi_parser.advance(data, |cmd| match cmd {
+            TermCmd::PutChar(c) => self.term_state.put_char(c),
+            TermCmd::CarriageReturn => self.term_state.cursor.x = 0,
+            TermCmd::LineFeed => self.term_state.cursor.y += 1,
+            TermCmd::CursorUp(n) => {
+                self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize);
             }
+            TermCmd::CursorDown(n) => {
+                self.term_state.cursor.y += n as usize;
+            }
+            TermCmd::CursorLeft(n) => {
+                self.term_state.cursor.x = self.term_state.cursor.x.saturating_sub(u16::from(n));
+            }
+            TermCmd::CursorRight(n) => {
+                self.term_state.cursor.x += u16::from(n);
+            }
+            TermCmd::CursorCrUp(n) => {
+                self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize);
+                self.term_state.cursor.x = 0;
+            }
+            TermCmd::CursorCrDown(n) => {
+                self.term_state.cursor.y += n as usize;
+                self.term_state.cursor.x = 0;
+            }
+            TermCmd::EraseFromCursorToEol => self.term_state.erase_from_cursor_to_eol(),
         });
     }
     /// Completely reset the terminal to its initial state
