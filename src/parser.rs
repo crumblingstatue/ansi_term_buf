@@ -126,9 +126,9 @@ impl AnsiParser {
                                 }
                                 etc => {
                                     log::warn!(
-                                        "Ignored control code (ch, hex, dec): '{ch}', {etc:X?}, {etc}, params(hex, dec): {params:X?}, {params:?}",
+                                        "Ignored control code (ch, hex, dec): '{ch}', {etc:X?}, {etc}, params: {params:?}",
                                         ch = etc as char,
-                                        params = self.param_bytes
+                                        params = std::str::from_utf8(&self.param_bytes)
                                     );
                                 }
                             }
