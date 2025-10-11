@@ -26,7 +26,7 @@ pub struct Term {
 struct TermState {
     width: u16,
     height: usize,
-    cells: Vec<u8>,
+    cells: Vec<char>,
     cursor: Cursor,
 }
 
@@ -40,19 +40,19 @@ impl TermState {
         }
     }
     fn contents_to_string(&self) -> String {
-        let mut buf = Vec::with_capacity(self.width as usize * self.height);
+        let mut buf = String::with_capacity(self.width as usize * self.height);
         for y in 0..self.height {
-            buf.extend_from_slice(self.line_slice(y));
-            buf.push(b'\n');
+            buf.extend(self.line_slice(y));
+            buf.push('\n');
         }
-        String::from_utf8_lossy(&buf).into_owned()
+        buf
     }
-    fn line_slice(&self, y: usize) -> &[u8] {
+    fn line_slice(&self, y: usize) -> &[char] {
         let from = y * self.width as usize;
         let to = from + self.width as usize;
         &self.cells[from..to]
     }
-    fn put_char(&mut self, ch: u8) {
+    fn put_char(&mut self, ch: char) {
         self.extend_while_cursor_past();
         self.cells[self.cursor.index(self.width)] = ch;
         self.cursor.x += 1;
@@ -63,7 +63,7 @@ impl TermState {
     }
     fn extend(&mut self) {
         self.cells
-            .extend(std::iter::repeat_n(b' ', self.width as usize));
+            .extend(std::iter::repeat_n(' ', self.width as usize));
         self.height += 1;
     }
     fn extend_while_cursor_past(&mut self) {
@@ -77,7 +77,7 @@ impl TermState {
             if idx >= self.cells.len() {
                 break;
             }
-            self.cells[idx] = b' ';
+            self.cells[idx] = ' ';
         }
     }
 }
