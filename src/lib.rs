@@ -129,6 +129,10 @@ impl Term {
                 self.term_state.cursor.y += n as usize;
                 self.term_state.cursor.x = 0;
             }
+            TermCmd::CursorSet { x, y } => {
+                self.term_state.cursor.x = x.into();
+                self.term_state.cursor.y = y as usize;
+            }
             TermCmd::EraseFromCursorToEol => self.term_state.erase_from_cursor_to_eol(),
         });
     }

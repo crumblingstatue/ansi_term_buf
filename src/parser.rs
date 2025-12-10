@@ -1,3 +1,5 @@
+use std::iter::zip;
+
 const ESC: char = 0x1b as char;
 
 #[derive(Debug)]
@@ -8,6 +10,7 @@ pub struct AnsiParser {
 
 trait ParamBytesExt {
     fn parse_first(&self) -> Option<u8>;
+    fn parse<const N: usize>(&self) -> Option<[u8; N]>;
 }
 
 impl ParamBytesExt for Vec<u8> {
@@ -16,6 +19,15 @@ impl ParamBytesExt for Vec<u8> {
         let s = std::str::from_utf8(self).ok()?;
         let mut args = s.split(';');
         args.next()?.parse().ok()
+    }
+    fn parse<const N: usize>(&self) -> Option<[u8; N]> {
+        let s = std::str::from_utf8(self).ok()?;
+        let args = s.split(';');
+        let mut arr = [0; N];
+        for (arg, out) in zip(args, &mut arr) {
+            *out = arg.parse().ok()?;
+        }
+        Some(arr)
     }
 }
 
@@ -52,6 +64,11 @@ pub enum TermCmd {
     CursorCrDown(u8),
     /// Beginning of line, this many lines up
     CursorCrUp(u8),
+    /// Set the cursor to (x, y)
+    CursorSet {
+        x: u8,
+        y: u8,
+    },
     /// Erase from cursor to the end of line
     EraseFromCursorToEol,
 }
@@ -124,6 +141,10 @@ impl AnsiParser {
                                         // Beginning of prev line, N lines up
                                         let n = self.param_bytes.parse_first();
                                         term_callback(TermCmd::CursorCrUp(n.unwrap_or(1)));
+                                    }
+                                    'H' => {
+                                        let [x, y] = self.param_bytes.parse().unwrap_or([1, 1]);
+                                        term_callback(TermCmd::CursorSet { x, y });
                                     }
                                     etc => {
                                         log::warn!(
