@@ -71,6 +71,8 @@ pub enum TermCmd {
     },
     /// Erase from cursor to the end of line
     EraseFromCursorToEol,
+    /// Clear the screen, in the manner specified by the argument
+    Clear(u8),
 }
 
 impl AnsiParser {
@@ -145,6 +147,10 @@ impl AnsiParser {
                                     'H' => {
                                         let [x, y] = self.param_bytes.parse().unwrap_or([1, 1]);
                                         term_callback(TermCmd::CursorSet { x, y });
+                                    }
+                                    'J' => {
+                                        let mode = self.param_bytes.parse_first().unwrap_or(2);
+                                        term_callback(TermCmd::Clear(mode));
                                     }
                                     etc => {
                                         log::warn!(

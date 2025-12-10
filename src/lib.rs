@@ -80,6 +80,12 @@ impl TermState {
             self.cells[idx] = ' ';
         }
     }
+    fn clear(&mut self, mode: u8) {
+        if mode != 2 {
+            log::warn!("Clear mode {mode} not implemented.");
+        }
+        self.cells.fill(' ');
+    }
 }
 
 #[derive(Default)]
@@ -134,6 +140,7 @@ impl Term {
                 self.term_state.cursor.y = y as usize;
             }
             TermCmd::EraseFromCursorToEol => self.term_state.erase_from_cursor_to_eol(),
+            TermCmd::Clear(mode) => self.term_state.clear(mode),
         });
     }
     /// Completely reset the terminal to its initial state
