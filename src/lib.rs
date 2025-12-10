@@ -136,8 +136,8 @@ impl Term {
                 self.term_state.cursor.x = 0;
             }
             TermCmd::CursorSet { x, y } => {
-                self.term_state.cursor.x = x.into();
-                self.term_state.cursor.y = y as usize;
+                self.term_state.cursor.x = (x.saturating_sub(1)).into();
+                self.term_state.cursor.y = y.saturating_sub(1) as usize;
             }
             TermCmd::EraseFromCursorToEol => self.term_state.erase_from_cursor_to_eol(),
             TermCmd::Clear(mode) => self.term_state.clear(mode),
