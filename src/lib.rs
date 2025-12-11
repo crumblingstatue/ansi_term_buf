@@ -85,6 +85,7 @@ impl TermState {
             log::warn!("Clear mode {mode} not implemented.");
         }
         self.cells.fill(' ');
+        self.height = 0;
     }
 }
 
