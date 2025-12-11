@@ -21,6 +21,8 @@ use parser::{AnsiParser, TermCmd};
 pub struct Term {
     term_state: TermState,
     ansi_parser: AnsiParser,
+    /// The last rendered contents when a sync update was completed
+    last_contents: String,
 }
 
 struct TermState {
@@ -28,6 +30,8 @@ struct TermState {
     height: usize,
     cells: Vec<char>,
     cursor: Cursor,
+    /// Whether the buffer is currently updating according to synchronized output protocol
+    sync_update: bool,
 }
 
 impl TermState {
@@ -37,6 +41,7 @@ impl TermState {
             height: 0,
             cells: Vec::new(),
             cursor: Cursor::default(),
+            sync_update: false,
         }
     }
     fn contents_to_string(&self) -> String {
@@ -108,6 +113,7 @@ impl Term {
         Self {
             term_state: TermState::new(width),
             ansi_parser: AnsiParser::default(),
+            last_contents: String::new(),
         }
     }
     /// Feed bytes to the terminal, updating its state
@@ -142,6 +148,11 @@ impl Term {
             }
             TermCmd::EraseFromCursorToEol => self.term_state.erase_from_cursor_to_eol(),
             TermCmd::Clear(mode) => self.term_state.clear(mode),
+            TermCmd::BeginSyncUpdate => self.term_state.sync_update = true,
+            TermCmd::EndSyncUpdate => {
+                self.term_state.sync_update = false;
+                self.last_contents = self.term_state.contents_to_string();
+            }
         });
     }
     /// Completely reset the terminal to its initial state
@@ -154,7 +165,11 @@ impl Term {
     /// Get the contents of the terminal as a string
     #[must_use]
     pub fn contents_to_string(&self) -> String {
-        self.term_state.contents_to_string()
+        if self.term_state.sync_update {
+            self.last_contents.clone()
+        } else {
+            self.term_state.contents_to_string()
+        }
     }
     /// Returns whether the terminal buffer is "empty" (nothing has been written to it yet)
     #[must_use]

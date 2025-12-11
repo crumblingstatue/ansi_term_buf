@@ -73,6 +73,10 @@ pub enum TermCmd {
     EraseFromCursorToEol,
     /// Clear the screen, in the manner specified by the argument
     Clear(u8),
+    /// Begin synchronized update
+    BeginSyncUpdate,
+    /// End synchronized update
+    EndSyncUpdate,
 }
 
 impl AnsiParser {
@@ -151,6 +155,16 @@ impl AnsiParser {
                                     'J' => {
                                         let mode = self.param_bytes.parse_first().unwrap_or(2);
                                         term_callback(TermCmd::Clear(mode));
+                                    }
+                                    'h' => {
+                                        if self.param_bytes == b"?2026" {
+                                            term_callback(TermCmd::BeginSyncUpdate);
+                                        }
+                                    }
+                                    'l' => {
+                                        if self.param_bytes == b"?2026" {
+                                            term_callback(TermCmd::EndSyncUpdate);
+                                        }
                                     }
                                     etc => {
                                         log::warn!(
