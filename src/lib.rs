@@ -19,7 +19,7 @@ use parser::{AnsiParser, TermCmd};
 /// [`feed`]: Self::feed
 /// [`contents_to_string`]: Self::contents_to_string
 pub struct Term {
-    term_state: TermState,
+    state: TermState,
     ansi_parser: AnsiParser,
     /// The last rendered contents when a sync update was completed
     last_contents: String,
@@ -111,7 +111,7 @@ impl Term {
     #[must_use]
     pub fn new(width: u16) -> Self {
         Self {
-            term_state: TermState::new(width),
+            state: TermState::new(width),
             ansi_parser: AnsiParser::default(),
             last_contents: String::new(),
         }
@@ -119,61 +119,61 @@ impl Term {
     /// Feed bytes to the terminal, updating its state
     pub fn feed(&mut self, data: &[u8]) {
         self.ansi_parser.advance(data, |cmd| match cmd {
-            TermCmd::PutChar(c) => self.term_state.put_char(c),
-            TermCmd::CarriageReturn => self.term_state.cursor.x = 0,
-            TermCmd::LineFeed => self.term_state.cursor.y += 1,
+            TermCmd::PutChar(c) => self.state.put_char(c),
+            TermCmd::CarriageReturn => self.state.cursor.x = 0,
+            TermCmd::LineFeed => self.state.cursor.y += 1,
             TermCmd::CursorUp(n) => {
-                self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize);
+                self.state.cursor.y = self.state.cursor.y.saturating_sub(n as usize);
             }
             TermCmd::CursorDown(n) => {
-                self.term_state.cursor.y += n as usize;
+                self.state.cursor.y += n as usize;
             }
             TermCmd::CursorLeft(n) => {
-                self.term_state.cursor.x = self.term_state.cursor.x.saturating_sub(u16::from(n));
+                self.state.cursor.x = self.state.cursor.x.saturating_sub(u16::from(n));
             }
             TermCmd::CursorRight(n) => {
-                self.term_state.cursor.x += u16::from(n);
+                self.state.cursor.x += u16::from(n);
             }
             TermCmd::CursorCrUp(n) => {
-                self.term_state.cursor.y = self.term_state.cursor.y.saturating_sub(n as usize);
-                self.term_state.cursor.x = 0;
+                self.state.cursor.y = self.state.cursor.y.saturating_sub(n as usize);
+                self.state.cursor.x = 0;
             }
             TermCmd::CursorCrDown(n) => {
-                self.term_state.cursor.y += n as usize;
-                self.term_state.cursor.x = 0;
+                self.state.cursor.y += n as usize;
+                self.state.cursor.x = 0;
             }
             TermCmd::CursorSet { x, y } => {
-                self.term_state.cursor.x = (x.saturating_sub(1)).into();
-                self.term_state.cursor.y = y.saturating_sub(1) as usize;
+                self.state.cursor.x = (x.saturating_sub(1)).into();
+                self.state.cursor.y = y.saturating_sub(1) as usize;
             }
-            TermCmd::EraseFromCursorToEol => self.term_state.erase_from_cursor_to_eol(),
-            TermCmd::Clear(mode) => self.term_state.clear(mode),
-            TermCmd::BeginSyncUpdate => self.term_state.sync_update = true,
+            TermCmd::EraseFromCursorToEol => self.state.erase_from_cursor_to_eol(),
+            TermCmd::Clear(mode) => self.state.clear(mode),
+            TermCmd::BeginSyncUpdate => self.state.sync_update = true,
             TermCmd::EndSyncUpdate => {
-                self.term_state.sync_update = false;
-                self.last_contents = self.term_state.contents_to_string();
+                self.state.sync_update = false;
+                self.last_contents = self.state.contents_to_string();
             }
         });
     }
     /// Completely reset the terminal to its initial state
     pub fn reset(&mut self) {
-        self.term_state.cursor = Cursor::default();
-        self.term_state.cells.clear();
-        self.term_state.height = 0;
+        self.state.cursor = Cursor::default();
+        self.state.cells.clear();
+        self.state.height = 0;
         self.ansi_parser = AnsiParser::default();
     }
     /// Get the contents of the terminal as a string
     #[must_use]
     pub fn contents_to_string(&self) -> String {
-        if self.term_state.sync_update {
+        if self.state.sync_update {
             self.last_contents.clone()
         } else {
-            self.term_state.contents_to_string()
+            self.state.contents_to_string()
         }
     }
     /// Returns whether the terminal buffer is "empty" (nothing has been written to it yet)
     #[must_use]
     pub const fn is_empty(&self) -> bool {
-        self.term_state.cells.is_empty()
+        self.state.cells.is_empty()
     }
 }
