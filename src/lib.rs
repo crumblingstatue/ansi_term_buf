@@ -58,7 +58,7 @@ impl TermState {
         &self.cells[from..to]
     }
     fn put_char(&mut self, ch: char) {
-        self.extend_while_cursor_past();
+        self.add_row_while_cursor_past();
         self.cells[self.cursor.index(self.width)] = ch;
         self.cursor.x += 1;
         if self.cursor.x >= self.width {
@@ -66,14 +66,14 @@ impl TermState {
             self.cursor.y += 1;
         }
     }
-    fn extend(&mut self) {
+    fn add_row(&mut self) {
         self.cells
             .extend(std::iter::repeat_n(' ', self.width as usize));
         self.height += 1;
     }
-    fn extend_while_cursor_past(&mut self) {
+    fn add_row_while_cursor_past(&mut self) {
         while self.cursor.y >= self.height {
-            self.extend();
+            self.add_row();
         }
     }
     fn erase_from_cursor_to_eol(&mut self) {
@@ -89,7 +89,9 @@ impl TermState {
         if mode != 2 {
             log::warn!("Clear mode {mode} not implemented.");
         }
-        self.cells.fill(' ');
+        // Clear rather than fill with ' ' in order to avoid unbounded growth
+        // due to how self.add_row() works
+        self.cells.clear();
         self.height = 0;
     }
 }
